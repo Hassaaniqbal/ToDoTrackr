@@ -1,11 +1,24 @@
-// Registration.js
 import React from 'react';
-import { Form, Input, Button, Checkbox, Row, Col } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Row, Col, message } from 'antd';
+import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import axios from 'axios';
 
 const Signup = () => {
-  const onFinish = (values) => {
-    console.log('Received values of form: ', values);
+  const onFinish = async (values) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/signup', {
+        username: values.username,
+        email: values.email,
+        password: values.password
+      });
+
+      if (response.data.status === 'success') {
+        message.success('Registration successful!');
+        // You might want to redirect the user or update the app state here
+      }
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Registration failed. Please try again.');
+    }
   };
 
   return (
@@ -39,7 +52,7 @@ const Signup = () => {
                 { type: 'email', message: 'Please enter a valid email!' },
               ]}
             >
-              <Input placeholder="Email" size="large" />
+              <Input prefix={<MailOutlined />} placeholder="Email" size="large" />
             </Form.Item>
 
             <Form.Item
@@ -77,10 +90,6 @@ const Signup = () => {
                 placeholder="Confirm Password"
                 size="large"
               />
-            </Form.Item>
-
-            <Form.Item name="remember" valuePropName="checked">
-              <Checkbox>Remember me</Checkbox>
             </Form.Item>
 
             <Form.Item>
