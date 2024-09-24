@@ -2,19 +2,22 @@ import React from 'react';
 import { Form, Input, Button, Row, Col, message } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
+  const navigate = useNavigate(); // Initialize navigate
+
   const onFinish = async (values) => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/signup', {
         username: values.username,
         email: values.email,
-        password: values.password
+        password: values.password,
       });
 
       if (response.data.status === 'success') {
         message.success('Registration successful!');
-        // You might want to redirect the user or update the app state here
+        navigate('/signin'); // Redirect to login page
       }
     } catch (error) {
       message.error(error.response?.data?.message || 'Registration failed. Please try again.');
