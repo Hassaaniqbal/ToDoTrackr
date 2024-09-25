@@ -1,11 +1,32 @@
-// Login.js
 import React from 'react';
-import { Form, Input, Button, Checkbox, Row, Col } from 'antd';
+import { Form, Input, Button, Checkbox, Row, Col, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const onFinish = (values) => {
-    console.log('Received values of form: ', values);
+  const navigate = useNavigate(); // For redirection
+
+  // Handle form submission
+  const onFinish = async (values) => {
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/login', {
+        username: values.username,
+        password: values.password,
+      });
+
+      // console.log(res.data); // Check the response here
+
+      if (res.data.status === 'success') {
+        message.success('Login successful!');
+        localStorage.setItem('jwtToken', res.data.token); // Store using 'jwtToken'
+        navigate('/dashboard'); // Redirect to dashboard
+      } else {
+        message.error('Login failed. Please try again.');
+      }
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Login failed. Please try again.');
+    }
   };
 
   return (
@@ -19,6 +40,7 @@ const Login = () => {
             initialValues={{ remember: true }}
             layout="vertical"
           >
+            {/* Username input field */}
             <Form.Item
               name="username"
               label="Username"
@@ -31,6 +53,7 @@ const Login = () => {
               />
             </Form.Item>
 
+            {/* Password input field */}
             <Form.Item
               name="password"
               label="Password"
@@ -43,10 +66,12 @@ const Login = () => {
               />
             </Form.Item>
 
+            {/* Remember me checkbox */}
             <Form.Item name="remember" valuePropName="checked">
               <Checkbox>Remember me</Checkbox>
             </Form.Item>
 
+            {/* Submit button */}
             <Form.Item>
               <Button
                 type="primary"

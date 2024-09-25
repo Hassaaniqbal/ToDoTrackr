@@ -1,14 +1,32 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Layout, Input, Button, List, Row, Col, Typography, Menu, Dropdown } from 'antd';
 import { PlusOutlined, SearchOutlined, DeleteOutlined, CheckSquareTwoTone, LogoutOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for routing
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const MainPage = () => {
+  const navigate = useNavigate(); // Initialize the navigation hook
+
+  useEffect(() => {
+    // Check if JWT token exists
+    const token = localStorage.getItem("jwtToken"); 
+    // console.log('JWT Token:', token);  
+    if (!token) {
+      navigate('/signin'); // Redirect to login if token is not found
+    }
+  }, [navigate]);
+
+
+  const handleLogout = () => {
+    localStorage.removeItem("jwtToken"); // Clear the token
+    navigate('/signin'); // Redirect to login
+  };
+
   // Sample tasks
   const tasks = [
-    { id: 1, text: 'Make a cup of coffee or tea JDSFHJSDFHDF DFHIJDDFHIFD JHFRSJFHSI.', completed: false },
+    { id: 1, text: 'Make a cup of coffee or tea.', completed: false },
     { id: 2, text: 'Check and prioritize your calendar for the day.', completed: false },
     { id: 3, text: 'Respond to important emails.', completed: true },
     { id: 4, text: 'Start with the most important task first.', completed: false },
@@ -42,7 +60,7 @@ const MainPage = () => {
                 icon={<LogoutOutlined />} 
                 danger 
                 style={{ padding: '0 16px', fontSize: '14px' }} 
-                onClick={() => console.log("Logout clicked")}
+                onClick={handleLogout}
               >
                 Logout
               </Button>

@@ -4,10 +4,13 @@ const catchAsync = require('../utils/catchAsync');
 
 const protect = catchAsync(async (req, res, next) => {
   let token;
+
+  // Extract token from headers
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
 
+  // Check if token exists
   if (!token) {
     return res.status(401).json({
       status: 'fail',
@@ -15,8 +18,18 @@ const protect = catchAsync(async (req, res, next) => {
     });
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  // Verify token
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res.status(401).json({
+      status: 'fail',
+      message: 'Invalid token. Please log in again.',
+    });
+  }
 
+  // Check if the user still exists
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
     return res.status(401).json({
@@ -25,6 +38,7 @@ const protect = catchAsync(async (req, res, next) => {
     });
   }
 
+  // Attach user to the request
   req.user = currentUser;
   next();
 });
