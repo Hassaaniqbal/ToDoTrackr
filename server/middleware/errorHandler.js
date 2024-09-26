@@ -21,7 +21,7 @@ const errorHandler = (err, req, res, next) => {
     });
 };
 
-// Helper to detect MongoDB duplicate key error
+// Helper to detect MongoDB duplicate key error   //registration
 const isMongoDuplicateKeyError = (err) => {
     return err.code === 11000 && err.message.includes('registration');
 };

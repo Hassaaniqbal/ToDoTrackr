@@ -1,118 +1,149 @@
-import React, { useEffect } from 'react';
-import { Layout, Input, Button, List, Row, Col, Typography, Menu, Dropdown } from 'antd';
-import { PlusOutlined, SearchOutlined, DeleteOutlined, CheckSquareTwoTone, LogoutOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for routing
+import React, { useState, useEffect } from 'react';
+import { Layout, Input, Button, List, Row, Col, Typography, message } from 'antd';
+import { PlusOutlined, DeleteOutlined, CheckSquareTwoTone, CloseSquareTwoTone, LogoutOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios'; // Import axios for making API requests
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 const MainPage = () => {
-  const navigate = useNavigate(); // Initialize the navigation hook
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
+  const [username, setUsername] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if JWT token exists
-    const token = localStorage.getItem("jwtToken"); 
-    // console.log('JWT Token:', token);  
+    const token = localStorage.getItem('jwtToken');
     if (!token) {
-      navigate('/signin'); // Redirect to login if token is not found
+      navigate('/signin');
+    } else {
+      getUsername(token);
+      getTasks(token);
     }
   }, [navigate]);
 
+  const getUsername = async (token) => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsername(response.data.data.username);
+    } catch (error) {
+      message.error('Error fetching user info.');
+    }
+  };
+
+  const getTasks = async (token) => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/tasks', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTasks(response.data);
+    } catch (error) {
+      message.error('Error fetching tasks.');
+    }
+  };
+
+  const handleAddTask = async () => {
+    if (!newTask.trim()) return message.error('Task description is required.');
+
+    const token = localStorage.getItem('jwtToken');
+    try {
+      const response = await axios.post('http://localhost:5000/api/tasks/add', 
+        { description: newTask }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTasks([...tasks, response.data]);
+      setNewTask('');
+      message.success('Task added successfully.');
+    } catch (error) {
+      message.error('Error adding task.');
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    const token = localStorage.getItem('jwtToken');
+    try {
+      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTasks(tasks.filter(task => task._id !== taskId));
+      message.success('Task deleted successfully.');
+    } catch (error) {
+      message.error('Error deleting task.');
+    }
+  };
+
+  const handleToggleComplete = async (task) => {
+    const token = localStorage.getItem('jwtToken');
+    try {
+      const updatedTask = await axios.patch(
+        `http://localhost:5000/api/tasks/${task._id}`,
+        { completed: !task.completed }, // Toggle the completed field
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTasks(tasks.map(t => (t._id === task._id ? updatedTask.data : t))); // Update the task state
+      message.success('Task updated.');
+    } catch (error) {
+      message.error('Error updating task.');
+    }
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("jwtToken"); // Clear the token
-    navigate('/signin'); // Redirect to login
+    localStorage.removeItem('jwtToken');
+    navigate('/signin');
   };
-
-  // Sample tasks
-  const tasks = [
-    { id: 1, text: 'Make a cup of coffee or tea.', completed: false },
-    { id: 2, text: 'Check and prioritize your calendar for the day.', completed: false },
-    { id: 3, text: 'Respond to important emails.', completed: true },
-    { id: 4, text: 'Start with the most important task first.', completed: false },
-  ];
-
-  // Dropdown options
-  const handleMenuClick = (e) => {
-    console.log('Selected:', e.key);
-    // Add your logic for filter action based on the key
-  };
-
-  const menu = (
-    <Menu onClick={handleMenuClick}>
-      <Menu.Item key="1">Default</Menu.Item>
-      <Menu.Item key="2">Important</Menu.Item>
-      <Menu.Item key="3">Urgent</Menu.Item>
-    </Menu>
-  );
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
-      {/* Header */}
-      <Header style={{ backgroundColor: 'transparent', padding: 0, marginTop: '20px' }}>
+      <Header style={{ backgroundColor: 'transparent', padding: 0, marginTop: '20px', marginBottom: '30px' }}>
         <Row justify="center">
           <Col xs={24} sm={20} md={16} lg={12}>
-            {/* Responsive Header with space-between layout */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px', alignItems: 'center' }}>
-              <Title level={3} style={{ margin: 0, fontSize: '18px' }}>PERSONAL TODO APP</Title>
-              <Button 
-                type="primary" 
-                icon={<LogoutOutlined />} 
-                danger 
-                style={{ padding: '0 16px', fontSize: '14px' }} 
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px' }}>
+              <Title level={3} style={{ margin: 0, fontSize: '20px', textAlign: 'center' }}>PERSONAL TODO APP</Title>
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginTop: '10px' }}>
+                <span style={{ marginRight: '20px', fontSize: '14px' }}>User: {username}</span>
+                <Button type="primary" icon={<LogoutOutlined />} danger onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
             </div>
           </Col>
         </Row>
       </Header>
 
-      {/* Content */}
       <Content>
         <Row justify="center">
           <Col xs={24} sm={20} md={16} lg={12}>
-            {/* Responsive Content Box */}
             <div style={{ backgroundColor: '#f0f2f5', padding: '20px', borderRadius: '8px' }}>
-              {/* Input area */}
               <div style={{ display: 'flex', marginBottom: '20px' }}>
-                <Input placeholder="Add Todo" style={{ flex: 1, marginRight: '10px' }} />
-                <Button type="primary" icon={<PlusOutlined />} />
-              </div>
-
-              {/* Filter and mark all */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <Dropdown menu={menu} trigger={['click']}>
-                  <Button>Default</Button>
-                </Dropdown>
-
-                {/* Search Box */}
-                <Input
-                  placeholder="Search Todos"
-                  style={{ width: '200px', marginRight: '10px' }}
-                  suffix={<SearchOutlined />}
+                <Input 
+                  placeholder="Add Todo" 
+                  style={{ flex: 1, marginRight: '10px' }} 
+                  value={newTask} 
+                  onChange={(e) => setNewTask(e.target.value)} 
                 />
-                <Button type="primary" style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}>
-                  Mark All Completed
-                </Button>
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTask} />
               </div>
 
-              {/* Task list */}
               <List
                 bordered
                 dataSource={tasks}
-                renderItem={item => (
+                renderItem={task => (
                   <List.Item
                     actions={[
                       <Button
                         type="text"
-                        icon={<CheckSquareTwoTone twoToneColor="#52c41a" style={{ fontSize: '20px' }} />}
+                        icon={task.completed ? <CloseSquareTwoTone twoToneColor="#ff4d4f" /> : <CheckSquareTwoTone twoToneColor="#52c41a" />}
+                        onClick={() => handleToggleComplete(task)}
                       />,
-                      <Button type="text" icon={<DeleteOutlined style={{ fontSize: '20px' }} />} danger />,
+                      <Button type="text" icon={<DeleteOutlined />} danger onClick={() => handleDeleteTask(task._id)} />,
                     ]}
                   >
-                    <span style={{ fontSize: '16px' }}>{item.text}</span>
+                    <span style={{ textDecoration: task.completed ? 'line-through' : 'none' }}>
+                      {task.description}
+                    </span>
                   </List.Item>
                 )}
               />

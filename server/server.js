@@ -3,7 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
-// const userRoutes = require('./routes/userRoutes');
+const taskRoutes = require('./routes/taskRoutes');
+const userRoutes = require('./routes/userRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const { connectDB } = require('./config/database');
 
@@ -17,6 +18,10 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 // app.use('/api/users', userRoutes);
+
+app.use('/api/tasks', taskRoutes);
+
+app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
