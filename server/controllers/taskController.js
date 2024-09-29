@@ -21,7 +21,7 @@ exports.updateTask = catchAsync(async (req, res) => {
     { ...req.body },
     { new: true, runValidators: true }
   );
-  
+
   if (!task) {
     return res.status(404).json({ message: 'Task not found' });
   }
@@ -32,7 +32,7 @@ exports.updateTask = catchAsync(async (req, res) => {
 // Delete a task
 exports.deleteTask = catchAsync(async (req, res) => {
   const task = await Task.findByIdAndDelete(req.params.id);
-  
+
   if (!task) {
     return res.status(404).json({ message: 'Task not found' });
   }
