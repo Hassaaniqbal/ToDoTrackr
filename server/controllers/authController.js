@@ -9,6 +9,54 @@ const signToken = (id) => {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
+// Helper function to create a JWT token and send it via cookie
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  // Cookie options for the JWT token
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true, // Prevents the cookie from being accessed by client-side JavaScript
+  };
+
+  // Add secure flag for production (only send cookies via HTTPS)
+  if (process.env.NODE_ENV === 'production') {
+    cookieOptions.secure = true;
+  }
+
+  // Send the JWT token as a cookie
+  res.cookie('jwt', token, cookieOptions);
+
+  // Cookie options for the username
+  const usernameCookieOptions = {
+    expires: new Date(
+      Date.now() + Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: false, // Allow access to this cookie via client-side JavaScript
+  };
+
+  // Send the username as a cookie
+  res.cookie('username', user.username, usernameCookieOptions);
+
+  // Remove the password from the output
+  user.password = undefined;
+
+  // Send the token and user data
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    },
+  });
+};
+
 
 // SIGNUP CONTROLLER
 exports.signup = catchAsync(async (req, res, next) => {
@@ -23,24 +71,9 @@ exports.signup = catchAsync(async (req, res, next) => {
   // Create new user
   const newUser = await User.create({ username, email, password });
 
-  // Generate JWT token
-  const token = signToken(newUser._id);
-
-  // Respond with user data and token
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-      },
-    },
-  });
+  // Send token via cookie and response
+  createSendToken(newUser, 201, res);
 });
-
-
 
 // LOGIN CONTROLLER
 exports.login = catchAsync(async (req, res, next) => {
@@ -57,19 +90,6 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Incorrect username or password', 401));
   }
 
-  // 3) If everything is okay, generate a JWT token
-  const token = signToken(user._id);
-
-  // 4) Send success response
-  res.status(200).json({
-    status: 'success',
-    token,
-    data: {
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    },
-  });
+  // 3) If everything is okay, send token via cookie and response
+  createSendToken(user, 200, res);
 });

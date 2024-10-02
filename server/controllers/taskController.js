@@ -8,6 +8,7 @@ exports.getAllTasks = catchAsync(async (req, res) => {
   res.status(200).json(tasks);
 });
 
+
 // Add a new task
 exports.addTask = catchAsync(async (req, res) => {
   const task = await Task.create({ user: req.user._id, description: req.body.description });

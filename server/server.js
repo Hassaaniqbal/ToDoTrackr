@@ -4,24 +4,31 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const taskRoutes = require('./routes/taskRoutes');
-const userRoutes = require('./routes/userRoutes');
+
 const errorHandler = require('./middleware/errorHandler');
 const { connectDB } = require('./config/database');
+
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL, // Allow requests only from your frontend
+  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+};
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions)); // Apply CORS options
+app.use(express.json()); // Parse JSON request body
+
+app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-
 app.use('/api/tasks', taskRoutes);
 
-app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

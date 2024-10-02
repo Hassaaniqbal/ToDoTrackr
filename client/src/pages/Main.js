@@ -3,6 +3,7 @@ import { Layout, Input, Button, List, Row, Col, Typography, message, Card } from
 import { PlusOutlined, DeleteOutlined, CheckSquareTwoTone, CloseSquareTwoTone, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Cookies from 'js-cookie'; // Import the js-cookie library
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -10,54 +11,50 @@ const { Title } = Typography;
 const MainPage = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(Cookies.get('username') || ''); // Retrieve username from cookie
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
+    const token = Cookies.get('jwtToken'); // Get JWT from cookies
+
+    // console.log('Retrieved Token:', token); // Debugging: Check the token
+
     if (!token) {
       navigate('/signin');
     } else {
-      getUsername(token);
       getTasks(token);
     }
   }, [navigate]);
-
-  const getUsername = async (token) => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/users/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsername(response.data.data.username);
-    } catch (error) {
-      message.error('Error fetching user info.');
-    }
-  };
 
   const getTasks = async (token) => {
     try {
       const response = await axios.get('http://localhost:5000/api/tasks', {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       setTasks(response.data);
     } catch (error) {
       message.error('Error fetching tasks.');
+      // console.error('Error fetching tasks:', error.response ? error.response.data : error.message);
     }
   };
 
-  const handleAddTask = async () => {
-    if (typeof newTask !== 'string' || !newTask.trim()) {
+  const handleAddTask = async (taskDescription = null) => {
+    const description = taskDescription || newTask; // Use taskDescription from voice or newTask from input
+
+    // Trim the description and check for emptiness
+    if (typeof description !== 'string' || !description.trim()) {
       return message.error('Task description is required.');
     }
 
-    const token = localStorage.getItem('jwtToken');
+    const token = Cookies.get('jwtToken'); // Get JWT from cookies
     try {
       const response = await axios.post('http://localhost:5000/api/tasks/add',
-        { description: newTask }, // Ensure this is passed as a string
-        { headers: { Authorization: `Bearer ${token}` } }
+        { description: description.trim() }, // Trim the description to remove extra spaces
+        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
       setTasks([...tasks, response.data]);
-      setNewTask(''); // Clear input after task is added
+      setNewTask(''); // Clear the task input field if needed
       message.success('Task added successfully.');
     } catch (error) {
       message.error('Error adding task.');
@@ -65,10 +62,11 @@ const MainPage = () => {
   };
 
   const handleDeleteTask = async (taskId) => {
-    const token = localStorage.getItem('jwtToken');
+    const token = Cookies.get('jwtToken'); // Get JWT from cookies
     try {
       await axios.delete(`http://localhost:5000/api/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
       });
       setTasks(tasks.filter(task => task._id !== taskId));
       message.success('Task deleted successfully.');
@@ -78,12 +76,12 @@ const MainPage = () => {
   };
 
   const handleToggleComplete = async (task) => {
-    const token = localStorage.getItem('jwtToken');
+    const token = Cookies.get('jwtToken'); // Get JWT from cookies
     try {
       const updatedTask = await axios.patch(
         `http://localhost:5000/api/tasks/${task._id}`,
-        { completed: !task.completed }, // Toggle the completed status
-        { headers: { Authorization: `Bearer ${token}` } }
+        { completed: !task.completed },
+        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
       setTasks(tasks.map(t => (t._id === task._id ? updatedTask.data : t)));
       message.success(task.completed ? 'Task marked as incomplete.' : 'Task marked as completed.');
@@ -93,11 +91,11 @@ const MainPage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('jwtToken');
+    Cookies.remove('jwtToken'); // Remove JWT from cookies
+    Cookies.remove('username');
     navigate('/signin');
   };
 
-  // Voice Command Handling with Web Speech API
   const handleVoiceCommand = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -110,10 +108,14 @@ const MainPage = () => {
       const transcript = event.results[0][0].transcript.toLowerCase();
       message.info(`Voice command detected: "${transcript}"`);
 
-      // Parsing the voice command for specific actions
       if (transcript.includes('add task')) {
         const taskDescription = transcript.replace('add task', '').trim();
-        handleAddTask(taskDescription);
+
+        if (taskDescription) {
+          handleAddTask(taskDescription);  // Pass voice-extracted task description
+        } else {
+          message.error('No task description provided.');
+        }
       } else if (transcript.includes('delete task')) {
         const taskNumber = transcript.match(/\d+/);
         if (taskNumber && tasks[taskNumber[0] - 1]) {
@@ -131,7 +133,7 @@ const MainPage = () => {
       } else if (transcript.includes('incomplete task')) {
         const taskNumber = transcript.match(/\d+/);
         if (taskNumber && tasks[taskNumber[0] - 1]) {
-          handleToggleComplete(tasks[taskNumber[0] - 1]); // Call the same toggle function
+          handleToggleComplete(tasks[taskNumber[0] - 1]);
         } else {
           message.error('Invalid task number.');
         }
@@ -175,8 +177,13 @@ const MainPage = () => {
                   style={{ flex: 1, marginRight: '10px' }}
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddTask(); // Allow adding task via Enter key
+                    }
+                  }}
                 />
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTask} />
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => handleAddTask()} />
               </div>
 
               {/* Scrollable Task List */}
@@ -206,32 +213,33 @@ const MainPage = () => {
           </Col>
         </Row>
 
-
         <Row justify="center" style={{ marginTop: '20px', marginBottom: '20px' }}>
           <Card
             bordered={false}
             style={{
               width: 400,
               textAlign: 'center',
-              backgroundColor: '#f0f2f5' // Set the background color
+              backgroundColor: '#f0f2f5' // Set the background color of the card
             }}
           >
-            <Title level={4} style={{ marginBottom: '15px' }}>Voice Task Management</Title>
+
+            <Title level={4}>Voice Task Management</Title>
             <Button type="primary" onClick={handleVoiceCommand}>
-              Start Listening
+              Start Voice Command
             </Button>
+
             <div style={{ marginTop: '15px' }}>
               <strong>Sample Voice Commands:</strong>
               <ul style={{ marginTop: '10px', paddingLeft: '15px' }}>
-                <li>Add task: <code>Add task I want to go to basketball match tomorrow</code></li>
-                <li>Delete task: <code>Delete task number 1</code></li>
+                <li>Add task: <code>Basketball match tomorrow</code></li>
+                <li>Delete task: <code>Delete task 1</code></li>
                 <li>Complete task: <code>Complete task 3</code></li>
                 <li>Incomplete task: <code>Incomplete task 2</code></li>
               </ul>
             </div>
+
           </Card>
         </Row>
-
       </Content>
     </Layout>
   );

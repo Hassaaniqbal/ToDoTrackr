@@ -3,24 +3,30 @@ import { Form, Input, Button, Checkbox, Row, Col, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const navigate = useNavigate(); // For redirection
 
-  // Handle form submission
   const onFinish = async (values) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        username: values.username,
-        password: values.password,
-      });
-
-      // console.log(res.data); // Check the response here
+      const res = await axios.post(
+        'http://localhost:5000/api/auth/login',
+        {
+          username: values.username,
+          password: values.password,
+        },
+        { withCredentials: true } // Ensure this line is included
+      );
 
       if (res.data.status === 'success') {
         message.success('Login successful!');
-        localStorage.setItem('jwtToken', res.data.token); // Store using 'jwtToken'
-        navigate('/dashboard'); // Redirect to dashboard
+        // Save the token in a cookie (if you haven't already)
+        // Use a library like js-cookie to manage cookies
+        Cookies.set('jwtToken', res.data.token); // Set cookie 
+
+        // Redirect to dashboard
+        navigate('/dashboard');
       } else {
         message.error('Login failed. Please try again.');
       }
@@ -28,6 +34,7 @@ const Login = () => {
       message.error(error.response?.data?.message || 'Login failed. Please try again.');
     }
   };
+
 
   return (
     <Row justify="center" align="middle" style={{ minHeight: '100vh', padding: '20px' }}>

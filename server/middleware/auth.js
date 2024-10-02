@@ -5,9 +5,10 @@ const catchAsync = require('../utils/catchAsync');
 const protect = catchAsync(async (req, res, next) => {
   let token;
 
-  // Extract token from headers
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
+  // Extract token from cookies
+  if (req.cookies.jwt) {
+    token = req.cookies.jwt; // Get token from the jwt cookie
+    // console.log('Token:', token);
   }
 
   // Check if token exists
@@ -22,7 +23,14 @@ const protect = catchAsync(async (req, res, next) => {
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // console.log('Decoded:', decoded);
   } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Your token has expired! Please log in again.',
+      });
+    }
     return res.status(401).json({
       status: 'fail',
       message: 'Invalid token. Please log in again.',
@@ -38,7 +46,7 @@ const protect = catchAsync(async (req, res, next) => {
     });
   }
 
-  // Attach user to the request
+  // Attach user to the request object
   req.user = currentUser;
   next();
 });

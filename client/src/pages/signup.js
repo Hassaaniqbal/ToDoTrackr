@@ -13,6 +13,8 @@ const Signup = () => {
         username: values.username,
         email: values.email,
         password: values.password,
+      }, {
+        withCredentials: true, // Important: Allow cookies to be sent and received
       });
 
       if (response.data.status === 'success') {
