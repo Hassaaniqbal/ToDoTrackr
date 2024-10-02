@@ -29,7 +29,7 @@ A MERN stack To-Do List application with voice command functionality, enabling u
 
 ## Demo
 
-Insert gif or link to demo
+available soon
 
 
 ## Installation and Setup
