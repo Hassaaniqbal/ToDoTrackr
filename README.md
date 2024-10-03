@@ -62,9 +62,11 @@ Install dependencies:
 Configure the environment variables:
 ```bash
   PORT=5000
-  MONGODB_URI=<Your MongoDB Connection String>
+  MONGODB_URI=mongodb://<your_mongodb_uri_here>
   JWT_SECRET=your_jwt_secret_key
-  JWT_EXPIRES_IN=30d 
+  JWT_EXPIRES_IN=1h
+  JWT_COOKIE_EXPIRES_IN=  # Expiration time for the cookie
+  FRONTEND_URL=http://localhost:3000
 ```
 Start the backend server:
 ```bash
