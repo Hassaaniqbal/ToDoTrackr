@@ -26,6 +26,11 @@ const Signup = () => {
     }
   };
 
+    // Handler to redirect to the registration page
+    const redirectToLogin = () => {
+      navigate('/signin');
+    };
+
   return (
     <Row justify="center" align="middle" style={{ minHeight: '100vh', padding: '20px' }}>
       <Col xs={24} sm={16} md={12} lg={8} xl={6}>
@@ -107,6 +112,18 @@ const Signup = () => {
                 Register
               </Button>
             </Form.Item>
+
+            <Form.Item style={{ textAlign: 'center' }}>
+              <span>Already registered? </span>
+              <Button
+                type="link"
+                onClick={redirectToLogin}
+                style={{ padding: 0 }}
+              >
+                Sign in
+              </Button>
+            </Form.Item>
+            
           </Form>
         </div>
       </Col>

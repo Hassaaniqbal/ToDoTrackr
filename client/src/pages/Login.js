@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Button, Checkbox, Row, Col, message } from 'antd';
+import { Form, Input, Button, Row, Col, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +34,11 @@ const Login = () => {
       message.error(error.response?.data?.message || 'Login failed. Please try again.');
     }
   };
+
+    // Handler to redirect to the registration page
+    const redirectToRegister = () => {
+      navigate('/');
+    };
 
 
   return (
@@ -73,11 +78,6 @@ const Login = () => {
               />
             </Form.Item>
 
-            {/* Remember me checkbox */}
-            <Form.Item name="remember" valuePropName="checked">
-              <Checkbox>Remember me</Checkbox>
-            </Form.Item>
-
             {/* Submit button */}
             <Form.Item>
               <Button
@@ -89,6 +89,18 @@ const Login = () => {
                 Login
               </Button>
             </Form.Item>
+
+            <Form.Item style={{ textAlign: 'center' }}>
+              <span>Not registered? </span>
+              <Button
+                type="link"
+                onClick={redirectToRegister}
+                style={{ padding: 0 }}
+              >
+                Sign up
+              </Button>
+            </Form.Item>
+
           </Form>
         </div>
       </Col>
