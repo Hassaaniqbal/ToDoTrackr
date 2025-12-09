@@ -1,0 +1,10 @@
+node_modules
+.git
+*.md
+screenshot.png
+CODE_OF_CONDUCT.md
+contributing.md
+LICENSE.txt
+samplelogin.txt
+client/node_modules
+server/node_modules
