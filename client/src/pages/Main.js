@@ -13,7 +13,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const MainPage = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
-  const [username, setUsername] = useState(Cookies.get('username') || ''); // Retrieve username from cookie
+  const username = Cookies.get('username') || ''; // Retrieve username from cookie
   const navigate = useNavigate();
 
   useEffect(() => {
