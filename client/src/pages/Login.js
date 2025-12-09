@@ -5,13 +5,15 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Login = () => {
   const navigate = useNavigate(); // For redirection
 
   const onFinish = async (values) => {
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/auth/login',
+        `${API_URL}/api/auth/login`,
         {
           username: values.username,
           password: values.password,

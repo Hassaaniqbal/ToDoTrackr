@@ -8,6 +8,8 @@ import Cookies from 'js-cookie'; // Import the js-cookie library
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const MainPage = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
@@ -28,7 +30,7 @@ const MainPage = () => {
 
   const getTasks = async (token) => {
     try {
-      const response = await axios.get('http://localhost:5000/api/tasks', {
+      const response = await axios.get(`${API_URL}/api/tasks`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
@@ -49,7 +51,7 @@ const MainPage = () => {
 
     const token = Cookies.get('jwtToken'); // Get JWT from cookies
     try {
-      const response = await axios.post('http://localhost:5000/api/tasks/add',
+      const response = await axios.post(`${API_URL}/api/tasks/add`,
         { description: description.trim() }, // Trim the description to remove extra spaces
         { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
@@ -64,7 +66,7 @@ const MainPage = () => {
   const handleDeleteTask = async (taskId) => {
     const token = Cookies.get('jwtToken'); // Get JWT from cookies
     try {
-      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`, {
+      await axios.delete(`${API_URL}/api/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
       });
@@ -79,7 +81,7 @@ const MainPage = () => {
     const token = Cookies.get('jwtToken'); // Get JWT from cookies
     try {
       const updatedTask = await axios.patch(
-        `http://localhost:5000/api/tasks/${task._id}`,
+        `${API_URL}/api/tasks/${task._id}`,
         { completed: !task.completed },
         { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );

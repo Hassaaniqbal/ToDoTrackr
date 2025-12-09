@@ -4,12 +4,14 @@ import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Signup = () => {
   const navigate = useNavigate(); // Initialize navigate
 
   const onFinish = async (values) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signup', {
+      const response = await axios.post(`${API_URL}/api/auth/signup`, {
         username: values.username,
         email: values.email,
         password: values.password,
